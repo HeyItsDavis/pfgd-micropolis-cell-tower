@@ -24,6 +24,10 @@ public class BudgetNumbers
 	public int roadFunded;
 	public double roadPercent;
 
+	public int cellServiceRequest;
+	public int cellServiceFunded;
+	public double cellServicePercent;
+	
 	public int fireRequest;
 	public int fireFunded;
 	public double firePercent;

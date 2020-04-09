@@ -138,6 +138,7 @@ public class Micropolis
 	int lastRoadTotal;
 	int lastRailTotal;
 	int lastTotalPop;
+	int lastCellTowerCount;
 	int lastFireStationCount;
 	int lastPoliceCount;
 
@@ -175,12 +176,13 @@ public class Micropolis
 	//
 	public int cityTax = 7;
 	public double roadPercent = 1.0;
+	public double cellServicePercent = 1.0;
 	public double policePercent = 1.0;
 	public double firePercent = 1.0;
 
 	int taxEffect = 7;
 	int roadEffect = 32;
-	int cellServiceEffect= 80;
+	int cellServiceEffect= 70;
 	int policeEffect = 1000;
 	int fireEffect = 1000;
 
@@ -863,16 +865,7 @@ public class Micropolis
 				}
 				localDensityMap[Ycount][Xcount] = average/16;
 			}
-		}
-//		for (int sy = 0; sy < localDensityMap.length; sy++) {
-//			for (int sx = 0; sx < localDensityMap[sy].length; sx++) {
-//				System.out.println(localDensityMap[sy][sx]);
-//				System.out.println(sy*sx);
-//			}
-//			
-//		}
-		
-		
+		}		
 	}
 	
 	void cellServiceAnalysis()
@@ -1787,6 +1780,7 @@ public class Micropolis
 		lastRoadTotal = roadTotal;
 		lastRailTotal = railTotal;
 		lastTotalPop = totalPop;
+		lastCellTowerCount = cellTowerCount;
 		lastFireStationCount = fireStationCount;
 		lastPoliceCount = policeCount;
 
@@ -1796,6 +1790,7 @@ public class Micropolis
 		budget.roadFundEscrow -= b.roadFunded;
 		budget.fireFundEscrow -= b.fireFunded;
 		budget.policeFundEscrow -= b.policeFunded;
+		budget.cellServiceFundEscrow -= b.cellServiceFunded;
 
 		taxEffect = b.taxRate;
 		roadEffect = b.roadRequest != 0 ?
@@ -1807,6 +1802,9 @@ public class Micropolis
 		fireEffect = b.fireRequest != 0 ?
 			(int)Math.floor(1000.0 * (double)b.fireFunded / (double)b.fireRequest) :
 			1000;
+		cellServiceEffect = b.cellServiceRequest != 0 ?
+				(int)Math.floor(60.0 * (double)b.cellServiceFunded / (double)b.cellServiceRequest) :
+				60;
 	}
 
 	public static class FinancialHistory
@@ -1821,7 +1819,7 @@ public class Micropolis
 	void collectTax()
 	{
 		int revenue = budget.taxFund / TAXFREQ;
-		int expenses = -(budget.roadFundEscrow + budget.fireFundEscrow + budget.policeFundEscrow) / TAXFREQ;
+		int expenses = -(budget.roadFundEscrow + budget.fireFundEscrow + budget.policeFundEscrow + budget.cellServiceFundEscrow) / TAXFREQ;
 
 		FinancialHistory hist = new FinancialHistory();
 		hist.cityTime = cityTime;
@@ -1838,6 +1836,7 @@ public class Micropolis
 		budget.roadFundEscrow = 0;
 		budget.fireFundEscrow = 0;
 		budget.policeFundEscrow = 0;
+		budget.cellServiceFundEscrow = 0;
 	}
 
 	/** Annual maintenance cost of each police station. */
@@ -1845,6 +1844,9 @@ public class Micropolis
 
 	/** Annual maintenance cost of each fire station. */
 	static final int FIRE_STATION_MAINTENANCE = 100;
+	
+	/** Annual maintenance cost of each cell tower. */
+	static final int CELL_TOWER_MAINTENANCE = 25;
 
 	/**
 	 * Calculate the current budget numbers.
@@ -1854,6 +1856,7 @@ public class Micropolis
 		BudgetNumbers b = new BudgetNumbers();
 		b.taxRate = Math.max(0, cityTax);
 		b.roadPercent = Math.max(0.0, roadPercent);
+		b.cellServicePercent = Math.max(0.0, cellServicePercent);
 		b.firePercent = Math.max(0.0, firePercent);
 		b.policePercent = Math.max(0.0, policePercent);
 
@@ -1862,10 +1865,12 @@ public class Micropolis
 		assert b.taxIncome >= 0;
 
 		b.roadRequest = (int)Math.round((lastRoadTotal + lastRailTotal * 2) * RLevels[gameLevel]);
+		b.cellServiceRequest = CELL_TOWER_MAINTENANCE * lastCellTowerCount;
 		b.fireRequest = FIRE_STATION_MAINTENANCE * lastFireStationCount;
 		b.policeRequest = POLICE_STATION_MAINTENANCE * lastPoliceCount;
 
 		b.roadFunded = (int)Math.round(b.roadRequest * b.roadPercent);
+		b.cellServiceFunded = (int)Math.round(b.cellServiceRequest * b.cellServicePercent);
 		b.fireFunded = (int)Math.round(b.fireRequest * b.firePercent);
 		b.policeFunded = (int)Math.round(b.policeRequest * b.policePercent);
 
@@ -1881,6 +1886,18 @@ public class Micropolis
 				if (yumDuckets >= b.policeFunded)
 				{
 					yumDuckets -= b.policeFunded;
+					if (yumDuckets >= b.cellServiceFunded)
+					{
+						yumDuckets -= b.cellServiceFunded;
+					}
+					else
+					{
+						assert b.cellServiceRequest != 0;
+
+						b.cellServiceFunded = yumDuckets;
+						b.cellServicePercent = (double)b.cellServiceFunded / (double)b.cellServiceRequest;
+						yumDuckets = 0;
+					}
 				}
 				else
 				{
@@ -1888,6 +1905,8 @@ public class Micropolis
 
 					b.policeFunded = yumDuckets;
 					b.policePercent = (double)b.policeFunded / (double)b.policeRequest;
+					b.cellServiceFunded = 0;
+					b.cellServicePercent = 0.0;
 					yumDuckets = 0;
 				}
 			}
@@ -1899,6 +1918,8 @@ public class Micropolis
 				b.firePercent = (double)b.fireFunded / (double)b.fireRequest;
 				b.policeFunded = 0;
 				b.policePercent = 0.0;
+				b.cellServiceFunded = 0;
+				b.cellServicePercent = 0.0;
 				yumDuckets = 0;
 			}
 		}
@@ -1912,9 +1933,11 @@ public class Micropolis
 			b.firePercent = 0.0;
 			b.policeFunded = 0;
 			b.policePercent = 0.0;
+			b.cellServiceFunded = 0;
+			b.cellServicePercent = 0.0;
 		}
 
-		b.operatingExpenses = b.roadFunded + b.fireFunded + b.policeFunded;
+		b.operatingExpenses = b.roadFunded + b.fireFunded + b.policeFunded + b.cellServiceFunded;
 		b.newBalance = b.previousBalance + b.taxIncome - b.operatingExpenses;
 
 		return b;
