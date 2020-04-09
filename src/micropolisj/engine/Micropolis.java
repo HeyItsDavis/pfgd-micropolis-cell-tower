@@ -878,6 +878,7 @@ public class Micropolis
 	void cellServiceAnalysis()
 	{
 		localDensityAverage();
+		
 		for (int sy = 0; sy < cellServiceMap.length; sy++) {
 			for (int sx = 0; sx < cellServiceMap[sy].length; sx++) {
 				if (cellServiceMap[sy][sx] != 0) {
@@ -885,7 +886,7 @@ public class Micropolis
 				}	
 			}
 		}
-
+		//System.out.println(cellServiceCoverageMap[0][0]);
 		fireMapOverlayDataChanged(MapState.CELLSERVICE_OVERLAY);
 	}
 	
@@ -894,10 +895,11 @@ public class Micropolis
 		policeMap = smoothFirePoliceMap(policeMap);
 		policeMap = smoothFirePoliceMap(policeMap);
 		policeMap = smoothFirePoliceMap(policeMap);
-
 		for (int sy = 0; sy < policeMap.length; sy++) {
 			for (int sx = 0; sx < policeMap[sy].length; sx++) {
-				policeMapEffect[sy][sx] = policeMap[sy][sx];
+				if (policeMap[sy][sx] != 0) {
+					policeMapEffect[sy][sx] = policeMap[sy][sx] + (cellServiceCoverageMap[sy][sx]/2);
+				}
 			}
 		}
 
@@ -911,7 +913,7 @@ public class Micropolis
 					count++;
 					int z = 128 - val + popDensity[hy][hx];
 					z = Math.min(300, z);
-					z -= policeMap[hy/4][hx/4];
+					z -= policeMapEffect[hy/4][hx/4];
 					z = Math.min(250, z);
 					z = Math.max(0, z);
 					crimeMem[hy][hx] = z;
