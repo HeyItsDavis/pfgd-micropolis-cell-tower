@@ -890,7 +890,7 @@ public class Micropolis
 		policeMap = smoothFirePoliceMap(policeMap);
 		for (int sy = 0; sy < policeMap.length; sy++) {
 			for (int sx = 0; sx < policeMap[sy].length; sx++) {
-				if (policeMap[sy][sx] != 0) {
+				if (policeMap[sy][sx] > 5) {
 					policeMapEffect[sy][sx] = policeMap[sy][sx] + (cellServiceCoverageMap[sy][sx]/2);
 				}
 			}
@@ -998,7 +998,9 @@ public class Micropolis
 		fireStMap = smoothFirePoliceMap(fireStMap);
 		for (int sy = 0; sy < fireStMap.length; sy++) {
 			for (int sx = 0; sx < fireStMap[sy].length; sx++) {
-				fireRate[sy][sx] = fireStMap[sy][sx];
+				if (fireStMap[sy][sx] > 5) {
+					fireRate[sy][sx] = fireStMap[sy][sx] + (cellServiceCoverageMap[sy][sx]/2);
+				}
 			}
 		}
 
