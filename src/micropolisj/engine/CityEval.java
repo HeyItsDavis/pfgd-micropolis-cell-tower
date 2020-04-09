@@ -96,6 +96,7 @@ public class CityEval
 		z += engine.railTotal * 10;
 		z += engine.policeCount * 1000;
 		z += engine.fireStationCount * 1000;
+		z += engine.cellTowerCount * 100; //TODO: re-tune this value
 		z += engine.hospitalCount * 400;
 		z += engine.stadiumCount * 3000;
 		z += engine.seaportCount * 5000;
@@ -235,6 +236,7 @@ public class CityEval
 		if (engine.comCap) { z = 0.85 * z; }
 		if (engine.indCap) { z = 0.85 * z; }
 		if (engine.roadEffect < 32) { z -= (32 - engine.roadEffect); }
+		if (engine.cellServiceEffect < 1000) { z *= (0.9 + (engine.cellServiceEffect / 10000.1)); }
 		if (engine.policeEffect < 1000) { z *= (0.9 + (engine.policeEffect / 10000.1)); }
 		if (engine.fireEffect < 1000) { z *= (0.9 + (engine.fireEffect / 10000.1)); }
 		if (engine.resValve < -1000) { z *= 0.85; }

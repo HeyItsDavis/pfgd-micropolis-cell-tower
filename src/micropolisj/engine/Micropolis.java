@@ -86,6 +86,8 @@ public class Micropolis
 	public int [][] fireRate;       //firestations reach- used for overlay graphs
 	int [][] policeMap;      //police stations- cleared and rebuilt each sim cycle
 	public int [][] policeMapEffect;//police stations reach- used for overlay graphs
+	int [][] cellServiceMap;      //police stations- cleared and rebuilt each sim cycle
+	public int [][] cellServiceCoverageMap;//police stations reach- used for overlay graphs
 
 	/** For each 8x8 section of city, this is an integer between 0 and 64,
 	 * with higher numbers being closer to the center of the city. */
@@ -120,6 +122,7 @@ public class Micropolis
 	int churchCount;
 	int policeCount;
 	int fireStationCount;
+	int cellTowerCount;
 	int stadiumCount;
 	int coalCount;
 	int nuclearCount;
@@ -175,6 +178,7 @@ public class Micropolis
 
 	int taxEffect = 7;
 	int roadEffect = 32;
+	int cellServiceEffect= 500;
 	int policeEffect = 1000;
 	int fireEffect = 1000;
 
@@ -244,6 +248,8 @@ public class Micropolis
 		fireStMap = new int[smY][smX];
 		policeMap = new int[smY][smX];
 		policeMapEffect = new int[smY][smX];
+		cellServiceMap = new int[smY][smX];
+		cellServiceCoverageMap = new int[smY][smX];
 		fireRate = new int[smY][smX];
 		comRate = new int[smY][smX];
 
@@ -533,6 +539,7 @@ public class Micropolis
 		churchCount = 0;
 		policeCount = 0;
 		fireStationCount = 0;
+		cellTowerCount = 0;
 		stadiumCount = 0;
 		coalCount = 0;
 		nuclearCount = 0;
@@ -544,6 +551,7 @@ public class Micropolis
 			for (int x = 0; x < fireStMap[y].length; x++) {
 				fireStMap[y][x] = 0;
 				policeMap[y][x] = 0;
+				cellServiceMap[y][x] = 0;
 			}
 		}
 	}
@@ -639,6 +647,7 @@ public class Micropolis
 			break;
 
 		case 13:
+			cellServiceAnalysis();
 			crimeScan();
 			break;
 
@@ -833,6 +842,20 @@ public class Micropolis
 		}
 	}
 
+	void cellServiceAnalysis()
+	{
+		cellServiceMap = smoothFirePoliceMap(cellServiceMap);
+		cellServiceMap = smoothFirePoliceMap(cellServiceMap);
+		cellServiceMap = smoothFirePoliceMap(cellServiceMap);
+		for (int sy = 0; sy < cellServiceMap.length; sy++) {
+			for (int sx = 0; sx < cellServiceMap[sy].length; sx++) {
+				cellServiceCoverageMap[sy][sx] = cellServiceMap[sy][sx];
+			}
+		}
+
+		fireMapOverlayDataChanged(MapState.FIRE_OVERLAY);
+	}
+	
 	void crimeScan()
 	{
 		policeMap = smoothFirePoliceMap(policeMap);

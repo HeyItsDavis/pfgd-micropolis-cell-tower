@@ -214,9 +214,21 @@ class MapScanner extends TileBehavior
 	{
 		//Very basic building functionality. Checks for power and does "repair"
 		boolean powerOn = checkZonePower();
+		city.cellTowerCount++;
 		if ((city.cityTime % 8) == 0) {
 			repairZone(CELL_TOWER, 3);
 		}
+		
+		int z;
+		if (powerOn) {
+			z = city.cellServiceEffect;
+		} else {
+			z = 0;
+		}
+
+		city.cellServiceMap[ypos/8][xpos/8] += z;
+		
+		
 	}
 
 	void doFireStation()
