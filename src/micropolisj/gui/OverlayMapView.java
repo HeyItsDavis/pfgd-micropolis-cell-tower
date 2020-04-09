@@ -213,6 +213,12 @@ public class OverlayMapView extends JComponent
 				maybeDrawRect(gr, getCI(A[y][x]),x*24,y*24,24,24);
 			}
 		}
+		
+//		for (int y = 0; y < A.length; y++) {
+//			for (int x = 0; x < A[y].length; x++) {
+//				maybeDrawRect(gr, getCI(A[y][x]),x*6,y*6,6,6);
+//			}
+//		}
 	}
 	
 	private void drawCellServiceRadius(Graphics gr)

@@ -88,6 +88,8 @@ public class Micropolis
 	public int [][] policeMapEffect;//police stations reach- used for overlay graphs
 	int [][] cellServiceMap;      //police stations- cleared and rebuilt each sim cycle
 	public int [][] cellServiceCoverageMap;//police stations reach- used for overlay graphs
+	
+	int [][] localDensityMap; // eighth-size density map
 
 	/** For each 8x8 section of city, this is an integer between 0 and 64,
 	 * with higher numbers being closer to the center of the city. */
@@ -178,7 +180,7 @@ public class Micropolis
 
 	int taxEffect = 7;
 	int roadEffect = 32;
-	int cellServiceEffect= 500;
+	int cellServiceEffect= 80;
 	int policeEffect = 1000;
 	int fireEffect = 1000;
 
@@ -235,6 +237,9 @@ public class Micropolis
 		crimeMem = new int[hY][hX];
 		popDensity = new int[hY][hX];
 		trfDensity = new int[hY][hX];
+		
+		//cellServiceMap = new int[hY][hX];
+		//cellServiceCoverageMap = new int[hY][hX]; //revert to 8 if it doesnt work
 
 		int qX = (width+3)/4;
 		int qY = (height+3)/4;
@@ -252,6 +257,8 @@ public class Micropolis
 		cellServiceCoverageMap = new int[smY][smX];
 		fireRate = new int[smY][smX];
 		comRate = new int[smY][smX];
+		
+		localDensityMap = new int [smY][smX];
 
 		centerMassX = hX;
 		centerMassY = hY;
@@ -552,6 +559,7 @@ public class Micropolis
 				fireStMap[y][x] = 0;
 				policeMap[y][x] = 0;
 				cellServiceMap[y][x] = 0;
+				localDensityMap[y][x] = 0;
 			}
 		}
 	}
@@ -647,12 +655,12 @@ public class Micropolis
 			break;
 
 		case 13:
-			cellServiceAnalysis();
-			crimeScan();
+			popDenScan();
 			break;
 
 		case 14:
-			popDenScan();
+			cellServiceAnalysis();
+			crimeScan();
 			break;
 
 		case 15:
@@ -842,18 +850,43 @@ public class Micropolis
 		}
 	}
 
+	void localDensityAverage()
+	{
+		int divLen = popDensity.length / 4;
+		for (int Ycount = 0; Ycount < divLen; Ycount++) {
+			for (int Xcount = 0; Xcount < divLen; Xcount++) {
+				int average = 0;
+				for (int sy = Ycount*4; sy < (Ycount+1)*4; sy++) {
+					for (int sx = Xcount*4; sx < (Xcount + 1)*4; sx++) {
+						average += popDensity[sy][sx];
+					}		
+				}
+				localDensityMap[Ycount][Xcount] = average/16;
+			}
+		}
+//		for (int sy = 0; sy < localDensityMap.length; sy++) {
+//			for (int sx = 0; sx < localDensityMap[sy].length; sx++) {
+//				System.out.println(localDensityMap[sy][sx]);
+//				System.out.println(sy*sx);
+//			}
+//			
+//		}
+		
+		
+	}
+	
 	void cellServiceAnalysis()
 	{
-		cellServiceMap = smoothFirePoliceMap(cellServiceMap);
-		cellServiceMap = smoothFirePoliceMap(cellServiceMap);
-		cellServiceMap = smoothFirePoliceMap(cellServiceMap);
+		localDensityAverage();
 		for (int sy = 0; sy < cellServiceMap.length; sy++) {
 			for (int sx = 0; sx < cellServiceMap[sy].length; sx++) {
-				cellServiceCoverageMap[sy][sx] = cellServiceMap[sy][sx];
+				if (cellServiceMap[sy][sx] != 0) {
+					cellServiceCoverageMap[sy][sx] = cellServiceMap[sy][sx]+localDensityMap[sy][sx];
+				}	
 			}
 		}
 
-		fireMapOverlayDataChanged(MapState.FIRE_OVERLAY);
+		fireMapOverlayDataChanged(MapState.CELLSERVICE_OVERLAY);
 	}
 	
 	void crimeScan()

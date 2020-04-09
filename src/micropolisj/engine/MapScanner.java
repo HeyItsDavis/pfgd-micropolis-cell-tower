@@ -226,8 +226,8 @@ class MapScanner extends TileBehavior
 			z = 0;
 		}
 
+		//city.cellServiceMap[ypos/2][xpos/2] += z; // revert to 8 if it doesnt work
 		city.cellServiceMap[ypos/8][xpos/8] += z;
-		
 		
 	}
 
